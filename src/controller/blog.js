@@ -1,41 +1,62 @@
+const { exec } = require('../db/mysql')
+
 const getList = (author, keyword) => {
-  return [
-    {
-      id: 1,
-      title: 'A',
-      content: '内容B',
-      createTime: 1612313160180,
-      author: '7years'
-    },
-    {
-      id: 2,
-      title: 'B',
-      content: '内容B',
-      createTime: 1612313193180,
-      author: 'zhangsan'
-    }
-  ]
+  let sql = `select * from t_blogs where 1=1 `
+  if (author) {
+    sql += `and author='${author}' `
+  }
+  if (keyword) {
+    sql += `and title like '%${keyword}%' `
+  }
+  sql += `order by createTime desc;`
+  return exec(sql)
 }
 const getDetail = (id) => {
-  return {
-    id: 1,
-    title: 'A',
-    content: '内容B',
-    createTime: 1612313160180,
-    author: '7years'
-  }
+  let sql = `select * from t_blogs where id='${id}'`
+  return exec(sql).then(rows => {
+    return rows[0]
+  })
+  
 }
 const newBlog = (blogData = {}) => {
-  return {
-    id: 3, // 博客id
-  }
+  console.log(blogData)
+  const title = blogData.title
+  const content = blogData.content
+  const author = blogData.author
+  const createTime = Date.now()
+
+  const sql = `
+    insert into t_blogs (title, content, createTime, author)
+    values ('${title}', '${content}', ${createTime}, '${author}');
+  `
+  return exec(sql).then(insertData => {
+    console.log(insertData)
+    return { id : insertData.insertId }
+  })
+
 }
 const updateBlog = (id, blogData = {}) => {
-  console.log(id, blogData)
-  return true
+  const title = blogData.title
+  const content = blogData.content
+
+  const sql = `
+    update t_blogs set title='${title}', content='${content}' where id=${id}
+  `
+  return exec(sql).then(updateData => {
+    if (updateData.affectedRows > 0) {
+      return true
+    } 
+    return false
+  })
 }
-const delBlog = (id) => {
-  return true
+const delBlog = (id, author) => {
+  const sql = `delete from t_blogs where id='${id}' and author='${author}'`
+  return exec(sql).then(deleteData => {
+    if (deleteData.affectedRows > 0) {
+      return true
+    } 
+    return false
+  })
 }
 module.exports = {
   getList,
